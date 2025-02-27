@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 from pymongo import MongoClient
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -6,6 +7,15 @@ import datetime
 import jwt
 
 app = FastAPI()
+
+# ✅ Add CORS Middleware to Allow Requests from Frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Replace with your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # MongoDB Connection
 MONGO_URI = ""
@@ -32,7 +42,7 @@ class StudySession(BaseModel):
     distractions: int = 0
     completed: bool = False
 
-# 🔹 1️⃣ Register User (Fixes 500 Error)
+# 🔹 1️⃣ Register User
 @app.post("/register")
 async def register_user(request: Request):
     try:
@@ -54,7 +64,7 @@ async def register_user(request: Request):
         print("Error:", str(e))  # Log the actual error
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# 🔹 2️⃣ Login User (Returns JWT Token)
+# 🔹 2️⃣ Login User
 @app.post("/login")
 async def login_user(request: Request):
     try:
@@ -71,7 +81,7 @@ async def login_user(request: Request):
         print("Login Error:", str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# 🔹 3️⃣ Start a Study Session (with Start & End Time)
+# 🔹 3️⃣ Start a Study Session
 @app.post("/start-session")
 async def start_session(request: Request):
     try:
