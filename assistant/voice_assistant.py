@@ -1,26 +1,17 @@
 import pyttsx3
 import speech_recognition as sr
-import requests
+from deepseek_api import deepseek_query
+from face_recognition_module import recognize_user
 import time
-from pymongo import MongoClient
-import os
 
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
 engine.setProperty("rate", 150)
 engine.setProperty("volume", 1.0)
 
-# MongoDB Atlas Connection
-MONGO_URI = os.getenv("MONGO_URI")
-client = MongoClient(MONGO_URI)
-db = client["study_tracker"]
-
-# DeepSeek API Key
-DEEPSEEK_API_KEY = ""
-
 def speak(text):
     """Convert text to speech"""
-    print(f"Assistant: {text}")  # For debugging
+    print(f"Assistant: {text}")
     engine.say(text)
     engine.runAndWait()
 
@@ -41,19 +32,14 @@ def listen():
             speak("Speech service is unavailable at the moment.")
         return ""
 
-def deepseek_query(text):
-    """Send user query to DeepSeek API"""
-    url = "https://api.deepseek.com/v1/assistant"
-    headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
-    data = {"input": text}
-    response = requests.post(url, json=data, headers=headers)
-    if response.status_code == 200:
-        return response.json().get("output", "I couldn't process that.")
-    return "Error in processing request."
-
 def assistant():
     """Main voice assistant loop"""
-    speak("Hello, how can I assist you today?")
+    user_name = recognize_user()  # Call face recognition module
+    if user_name:
+        speak(f"Hello {user_name}, how can I assist you today?")
+    else:
+        speak("I couldn't recognize you.")
+
     while True:
         command = listen()
         if command:
