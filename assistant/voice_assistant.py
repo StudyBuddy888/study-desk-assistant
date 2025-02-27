@@ -1,7 +1,6 @@
 import pyttsx3
 import speech_recognition as sr
 from deepseek_api import deepseek_query
-from face_recognition_module import recognize_user
 import time
 
 # Initialize text-to-speech engine
@@ -18,27 +17,29 @@ def speak(text):
 def listen():
     """Listen for user input via microphone"""
     recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        recognizer.adjust_for_ambient_noise(source)
-        try:
-            audio = recognizer.listen(source, timeout=10)
-            command = recognizer.recognize_google(audio).lower()
-            print(f"User said: {command}")
-            return command
-        except sr.UnknownValueError:
-            speak("Sorry, I didn't catch that. Can you repeat?")
-        except sr.RequestError:
-            speak("Speech service is unavailable at the moment.")
+
+    try:
+        with sr.Microphone() as source:
+            print("Listening...")
+            recognizer.adjust_for_ambient_noise(source)
+            try:
+                audio = recognizer.listen(source, timeout=10)
+                command = recognizer.recognize_google(audio).lower()
+                print(f"User said: {command}")
+                return command
+            except sr.UnknownValueError:
+                speak("Sorry, I didn't catch that. Can you repeat?")
+            except sr.RequestError:
+                speak("Speech service is unavailable at the moment.")
+    except OSError:
+        print("❌ Error: No microphone detected!")
         return ""
+    
+    return ""
 
 def assistant():
     """Main voice assistant loop"""
-    user_name = recognize_user()  # Call face recognition module
-    if user_name:
-        speak(f"Hello {user_name}, how can I assist you today?")
-    else:
-        speak("I couldn't recognize you.")
+    speak("Hello! How can I assist you today?")
 
     while True:
         command = listen()

@@ -7,10 +7,20 @@ def detect_distraction():
     print("Distraction detection is running...")
     cap = cv2.VideoCapture(0)
     
+    if not cap.isOpened():
+        print("Error: Camera not detected!")
+        return
+
     distraction_start = None
     distraction_threshold = 30  # 30 seconds of looking away
+    max_session_time = 5 * 60  # 5 minutes max before auto-exit
+    start_time = time.time()
 
     while True:
+        if time.time() - start_time > max_session_time:
+            print("Session ended automatically after 5 minutes.")
+            break
+
         ret, frame = cap.read()
         if not ret:
             break
@@ -30,12 +40,10 @@ def detect_distraction():
 
             if elapsed_time >= distraction_threshold:
                 print("ALERT: User has been distracted for too long!")
-                # You can add an alert sound or notification here
                 break
 
         cv2.imshow("Distraction Detector", frame)
 
-        # Press 'q' to quit manually
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
