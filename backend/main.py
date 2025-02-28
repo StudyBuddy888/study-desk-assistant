@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # ✅ MongoDB Connection
-MONGO_URI = "mongodb+srv://vishalgaonkar2004:gaonkar2004@cluster0.s4nkd.mongodb.net"
+MONGO_URI = "mongodb+srv://Studybuddy:Paav1234@studydeskcluster.lmi3g.mongodb.net/?retryWrites=true&w=majority&appName=StudyDeskCluster"
 client = MongoClient(MONGO_URI)
 db = client["study_tracker"]
 
@@ -35,6 +35,11 @@ class User(BaseModel):
     username: str
     email: str
     password: str
+
+class Task(BaseModel):
+    task: str
+    task_schedule: str
+    status: str
 
 # ✅ Task Model
 class TaskList(BaseModel):
@@ -92,31 +97,35 @@ async def login_user(request: Request):
 @app.post("/add-task")
 async def add_task(request: Request):
     try:
-        data = await request.json()
-        token = data.get("token")
-
-        if not token:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or "Bearer " not in auth_header:
             raise HTTPException(status_code=401, detail="Missing authentication token")
 
+        token = auth_header.split("Bearer ")[1]
         user_email = verify_token(token)
+
+        data = await request.json()
 
         if not all(key in data for key in ["task_schedule", "task", "status"]):
             raise HTTPException(status_code=400, detail="Missing task fields")
 
+        # Insert task into MongoDB
         task_data = {
             "user_email": user_email,
             "task_schedule": data["task_schedule"],
             "task": data["task"],
             "status": data["status"],
         }
-        
-        db.tasks.insert_one(task_data)
+
+        result = db.tasks.insert_one(task_data)  # Insert task
+        task_data["_id"] = str(result.inserted_id)  # Convert ObjectId to string
+
         return {"message": "Task added successfully", "task": task_data}
 
     except Exception as e:
         print("Task Error:", str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
-
+    
 # 🔹 4️⃣ Get User's Tasks (Authenticated)
 @app.get("/tasks")
 async def get_tasks(request: Request):

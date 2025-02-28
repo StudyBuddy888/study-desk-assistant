@@ -70,16 +70,22 @@ function App() {
             baseURL: "http://localhost:8000",
             headers: { Authorization: `Bearer ${token}` },
         });
-
+    
         try {
-            await api.post("/add-task", { task_schedule: taskSchedule, task, status });
+            await api.post("/add-task", { 
+                token, // 🔹 Include token in request body
+                task_schedule: taskSchedule, 
+                task, 
+                status 
+            });
             alert("Task added successfully!");
             fetchTasks();
         } catch (error) {
-            console.error(error);
+            console.error("Task Error:", error.response?.data?.detail || error.message);
             alert("Failed to add task.");
         }
     };
+    
 
     const updateTask = async (taskId, newStatus) => {
         const api = axios.create({
